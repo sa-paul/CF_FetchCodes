@@ -1,0 +1,34 @@
+{
+  "name": "Code-a-friend",
+  "version": "0.1.0",
+  "description": "Take notes at a click with youtube supercharged",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/client.js"],
+      "css": [],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "assets/logo.png",
+      "24": "assets/logo.png",
+      "32": "assets/logo.png"
+    },
+    "default_title": "Code-a-friend",
+    "default_popup": "popup.html"
+  },
+  
+  "manifest_version": 3
+}
