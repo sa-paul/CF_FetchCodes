@@ -1,34 +1,27 @@
 {
-  "name": "Code-a-friend",
-  "version": "0.1.0",
-  "description": "Take notes at a click with youtube supercharged",
-  "permissions": ["storage", "tabs"],
-  "host_permissions": ["<all_urls>"],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["js/client.js"],
-      "css": [],
-      "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "popup.js"
-      ],
-      "matches": ["<all_urls>"]
-    }
-  ],
-  "action": {
-    "default_icon": {
-      "16": "assets/logo.png",
-      "24": "assets/logo.png",
-      "32": "assets/logo.png"
+    "name": "CheckingExtension",
+    "description":"This extension is to research about how to make extension.",
+    "version": "0.0.1",
+    "manifest_version": 2,
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_icon": "sayn.png"
     },
-    "default_title": "Code-a-friend",
-    "default_popup": "popup.html"
-  },
-  
-  "manifest_version": 3
+    "icons": {
+        "256": "sayn.png"
+    },
+    "content_scripts": [
+        {
+          "js": [
+            "border.js"
+          ],
+          "css":[
+            "contentProgram.css"
+          ],
+          "matches": [
+            "https://codeforces.com/contest/*/problem/*",
+            "https://codeforces.com/problemset/problem/*"
+          ]
+        }
+      ]
 }
