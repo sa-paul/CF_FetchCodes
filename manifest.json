@@ -1,22 +1,30 @@
 {
-    "name": "CheckingExtension",
-    "description":"This extension is to research about how to make extension.",
+    "name": "CF FetchCodes",
+    "description":"Fetch Accepted Codes of CodeForces Friends",
     "version": "0.0.1",
     "manifest_version": 2,
     "browser_action": {
         "default_popup": "popup.html",
-        "default_icon": "sayn.png"
+        "default_icon": "assets/icon_128_128.png"
     },
     "icons": {
-        "256": "sayn.png"
+        "48": "assets/icon48.png",
+        "16": "assets/icon16.png",
+        "20": "assets/icon20.png",
+        "32": "assets/icon32.png",
+        "64": "assets/icon64.png",
+        "96": "assets/icon_96_96.png",
+        "128": "assets/icon_128_128.png"
     },
     "content_scripts": [
         {
           "js": [
-            "border.js"
+            "js/ContentFriends.js",
+            "js/popup.js"
           ],
           "css":[
-            "contentProgram.css"
+            "css/ContentFriends.css",
+            "css/popup.css"
           ],
           "matches": [
             "https://codeforces.com/contest/*/problem/*",

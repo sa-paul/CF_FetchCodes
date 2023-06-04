@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Balthazar&display=swap');
+.container{
+  width: 200px;
+  height: 150px;
+  justify-content: center;
+  text-align: center;
+}
+.name{
+  font-family: 'Balthazar', serif;
+  font-size: 30px;
+}
+#fetch{
+  color: #000001;
+}
+#codes{
+  color: #425E9D;
+}
+#namelogo img{
+  width: 64px;
+}
+#devby{
+  font-family: 'Balthazar', serif;
+  font-weight: 500;
+  font-size: 20px;
+}
+p{
+  margin: 0;
+}
+p > a{
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 20px;
+  cursor: pointer;
+  text-decoration: none;
+}
+#btn{
+  text-decoration: none;
+  border: none;
+  background: none;
+  color: #020cba;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 20px;
+  cursor: pointer;
+}
