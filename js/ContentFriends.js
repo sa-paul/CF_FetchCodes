@@ -33,7 +33,7 @@ pageContentID.innerHTML += `<!-- The Modal -->
 // Adding Highlighting Tools in head of content page
 document.head.insertAdjacentHTML(`beforeend`, `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>`);
+`);
 
 // Get the modal
 var modal = document.getElementById("myModal");
@@ -240,9 +240,10 @@ friendsPromise.then(async function (data) {
         modalParaID.innerHTML += `<span id="TextModal">Code submitted by </span><span id="HandleModal">${handle}\n\n </span>`;
 
         // Add a span element with a CSS class around the Code variable
-        modalParaID.innerHTML += `<span class="codeSnippet">${Code}\n\n</span>`;
+        // highlight code
+        let highlighted_code = hljs.highlightAuto(Code).value;
+        modalParaID.innerHTML += `<span class="codeSnippet">${highlighted_code}\n\n</span>`;
     });
-
   }
 });
 
