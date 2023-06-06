@@ -25,11 +25,15 @@ pageContentID.innerHTML += `<!-- The Modal -->
   <!-- Modal content -->
   <div class="modal-content">
     <span class="close">&times;</span>
-    <p>hello</p>
-    <pre id="modalPara" class="prettyprint lang-cpp linenums program-source">Modal on which a pop-up will be shown if clicked.</pre>
+    <pre id="modalParapre" class="prettyprint lang-cpp linenums program-source"><code id="modalPara" class="cpp"><span class="ModalHeader">→ Accepted Codes of Friends</span><hr></code></pre>
   </div>
 
 </div>;`
+
+// Adding Highlighting Tools in head of content page
+document.head.insertAdjacentHTML(`beforeend`, `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>`);
 
 // Get the modal
 var modal = document.getElementById("myModal");
@@ -94,12 +98,14 @@ function getContestIdFromUrl() {
 
 
 // fetchcode from contestid and submission id
+
+// non-highlighted
 async function fetchCodeFromSubmission(contest_id, submission_id) {
-  return fetch(`https://corsproxy.io/?https://codeforces.com/contest/${contest_id}/submission/${submission_id}`)
+  return fetch(`https://codeforces.com/contest/${contest_id}/submission/${submission_id}`)
     .then(function (res) {
       return res.text();
     })
-    .then(function (textHtml) {
+    .then(async function (textHtml) {
       // console.log(textHtml)
       // Regular expression pattern to extract the content between <pre id="program-source-text"> and </pre>
       const regexPattern = /<pre[^>]*id="program-source-text"[^>]*>(.*?)<\/pre>/s;
@@ -109,7 +115,7 @@ async function fetchCodeFromSubmission(contest_id, submission_id) {
 
       // Check if a match is found and extract the code
       if (match && match.length > 1) {
-        const code = match[1];
+        let code = match[1];
         return code;
       } else {
         return "No result found !";
@@ -121,6 +127,8 @@ async function fetchCodeFromSubmission(contest_id, submission_id) {
 }
 
 
+
+// Fetch handles of Friends
 async function getFriendsUsernameList() {
   return fetch("https://codeforces.com/friends")
     .then(function (res) {
@@ -152,11 +160,8 @@ async function getFriendsUsernameList() {
 // code of sayan 
 
 
-let prblid = getProblemIdFromUrl();
-console.log(prblid);
-
-let cntstid = getContestIdFromUrl();
-console.log(cntstid);
+let prblid = getProblemIdFromUrl(); // console.log(prblid);
+let cntstid = getContestIdFromUrl(); // console.log(cntstid);
 
 
 
@@ -205,15 +210,15 @@ let friendsPromise = getFriendsUsernameList();
 let count =0;
 let start = new Date();
 
-
+// Prints fetched code in Modal
 friendsPromise.then(async function (data) {
   for (let i = 0; i < data.length; i++) {
     handle = data[i];
-    console.log(handle);
+    // console.log(handle);
 
     // Print Submission ID in console
     let submissionId = await getSubmissionId(contestId, problemId, handle);
-    console.log(submissionId);
+    // console.log(submissionId);
 
       // made the function to wait
       count++;
@@ -230,95 +235,14 @@ friendsPromise.then(async function (data) {
 
     
     // Add code to Modal Corresponding to Submission ID
-    await fetchCodeFromSubmission(contestId,Number(submissionId))
-    .then(async function (code) {
-        modalParaID.innerHTML += `\n\nCode submitted by <span id="HandleModal">${handle}\n\n </span>`;
-        modalParaID.innerHTML += code;
-    })
+    await fetchCodeFromSubmission(contestId, Number(submissionId))
+    .then(async function (Code) {
+        modalParaID.innerHTML += `<span id="TextModal">Code submitted by </span><span id="HandleModal">${handle}\n\n </span>`;
+
+        // Add a span element with a CSS class around the Code variable
+        modalParaID.innerHTML += `<span class="codeSnippet">${Code}\n\n</span>`;
+    });
 
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// extra logic for my workings 
-/*
-  0. Get all the handles of cf user from the function below :
-  function getFriendsUsernameList()
-
-  1. Take the handles of user's cf friends and pass into the link below :
-  https://codeforces.com/api/contest.status?contestId=1837&from=1&count=10&handle=shu_900
-
-  2. for a given problem the contest id is same for all handles. So, for a specific handle,
-  search the submission id corresponding to the verdict : "ok"
-
-  3. put the submission id and contest id in the function below :
-  function fetchCodeFromSubmission(contest_id, submission_id)
-
-  4. Pass the accepted codes into the html using the function below :
-  fetchCodeFromSubmission(1837,207312522)
-  .then(function(code) {
-    modalParaID.innerHTML = code;
-  })
-
-  5. Finally you have added code and you can highlight codes using other highlighter (https://highlightjs.org/usage/)
-
-  6. The request in (1.) is made limited (called Rate Limmit) by cf to avoid multiple calls. So, use the
-  sleep function below (8.)
-
-  7. get the codes from the purser and add to the modal for all handles 
-
-  And your extension is ready to be  published
-
-  8. the sleep function form the text.js
-
-  async function test(){
-    let count =0;
-    let start = new Date();
-    while(true){
-        try {
-            let res = await fetch("https://codeforces.com/api/contest.status?contestId=1837&from=1&count=100&handle=shu_900");
-            if(res.status != 200){
-                console.log("ERROR : "+res.status.toString());
-                throw new Error("error occurred")
-            }
-            count++;
-            console.log(count);
-            let current = new Date();
-            if((count % 6) == 0){
-                await sleep(1000);
-                if((current-start) < 5000){
-                    await sleep(3500);
-                }
-                start = new Date();
-            }
-        } catch (error) {
-            console.log(error);
-            break;
-        }
-    }
-}
-
-  9. Use https://corsproxy.io/?https://ipinfo.io/json this proxy to avoid ip blocking
-  
-
-  10. API CF
-  api key : f46f17b290e164a06ffab556062198fa8f717909
-  secret : c399bea2b588b04c7c7760677343af8c07855576
-
-*/

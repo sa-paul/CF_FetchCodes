@@ -20,7 +20,7 @@
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 11; /* Sit on top */
-    padding-top: 70px; /* Location of the box */
+    padding-top: 50px; /* Location of the box */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -30,11 +30,19 @@
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
   }
 
-  #modalPara{
+  /* #modalPara{
     width: 80vw;
-    height: 80vh;
+    height: 100vh;
     overflow: auto;
     z-index: 30;
+  } */
+  #modalParapre{
+    width: 80vw;
+    height: 100%;
+    overflow: auto;
+    z-index: 30;
+    background-color: #eff0f1;
+    border: none;
   }
   
   /* Modal Content */
@@ -42,7 +50,8 @@
     background-color: #fefefe; 
     /* background-color: #eff0f1; */
     padding: 20px;
-    border: 1px solid #888;
+    border: 0.6rem solid #888;
+    border-radius: 0.6rem;
     width: 80%;
     height: 80%;
     margin: auto;
@@ -50,23 +59,44 @@
   
   /* The Close Button */
   .close {
-    color: #aaaaaa;
+    color: #800;
     float: right;
     font-size: 28px;
     font-weight: bold;
+    position: absolute;
+    top: 9vh;
+    left: 87vw;
   }
   
   .close:hover,
   .close:focus {
-    color: #000;
+    color: #888;
     text-decoration: none;
     cursor: pointer;
   }
   #myBtn{
     cursor: pointer;
   }
+  .ModalHeader{
+    color: #008;
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 0.2em 0;
+    position: relative;
+  }
   #HandleModal{
     color: #800;
     font-weight: 700;
     font-family: monospace;
+  }
+  #TextModal{
+    color: #080;
+    font-weight: bold;
+    font-family: monospace;
+  }
+  .codeSnippet {
+    color: blue;
+    font-weight: bold;
+    font-family: monospace;
+    /* background-color: #000; */
   }
