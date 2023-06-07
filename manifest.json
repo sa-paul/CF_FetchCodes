@@ -2,10 +2,12 @@
     "name": "CF FetchCodes",
     "description":"Fetch Accepted Codes of CodeForces Friends",
     "version": "0.0.1",
-    "manifest_version": 2,
-    "browser_action": {
-        "default_popup": "popup.html",
-        "default_icon": "assets/icon_128_128.png"
+    "manifest_version": 3,
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "128": "assets/icon_128_128.png"
+      }
     },
     "icons": {
         "48": "assets/icon48.png",
@@ -16,6 +18,11 @@
         "96": "assets/icon_96_96.png",
         "128": "assets/icon_128_128.png"
     },
+    "host_permissions": [
+      "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css",
+      "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js",
+      "https://codeforces.com/*"
+    ],
     "content_scripts": [
         {
           "js": [
