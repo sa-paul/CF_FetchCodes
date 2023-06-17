@@ -1,43 +1,45 @@
+/* Importing Google Font of Balthazar */
 @import url('https://fonts.googleapis.com/css2?family=Balthazar&display=swap');
-.container{
-  width: 200px;
-  height: 150px;
+
+/* PopUp Content to Extension Desig  */
+.popUpContainer {
+  width: 13rem;
+  height: 10rem;
   justify-content: center;
   text-align: center;
-}
-.name{
   font-family: 'Balthazar', serif;
-  font-size: 30px;
 }
-#fetch{
+
+/* Name Plate of Pop-Up Design  */
+.popUpNamePlate {
+  font-size: 2rem;
+}
+
+#popUpNameFetch {
   color: #000001;
 }
-#codes{
+
+#popUpNameCodes {
   color: #425E9D;
 }
-#namelogo img{
-  width: 64px;
+
+#popUpLogo {
+  width: 4rem;
 }
-#devby{
-  font-family: 'Balthazar', serif;
+
+/* CodeForces Handle of Developer Design  */
+#developerContact {
   font-weight: 500;
-  font-size: 20px;
-}
-p{
-  margin: 0;
-}
-p > a{
-  font-family: 'Times New Roman', Times, serif;
-  font-size: 20px;
+  font-size: 1.4rem;
   cursor: pointer;
-  text-decoration: none;
 }
-#btn{
-  text-decoration: none;
-  border: none;
-  background: none;
-  color: #020cba;
-  font-family: 'Times New Roman', Times, serif;
-  font-size: 20px;
+
+#developerHandle {
+  border: none;       /* Avoiding Button Border */
+  background: none;  /* Avoiding Button Background  */
+  color: blue;
+  font-weight: 600;
+  font-family: helvetica neue,Helvetica,Arial,sans-serif;
+  font-size: 1.4rem;
   cursor: pointer;
 }

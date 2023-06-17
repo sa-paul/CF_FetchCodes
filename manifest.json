@@ -19,8 +19,6 @@
         "128": "assets/icon_128_128.png"
     },
     "host_permissions": [
-      "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css",
-      "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js",
       "https://codeforces.com/*"
     ],
     "content_scripts": [
