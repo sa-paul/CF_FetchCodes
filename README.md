@@ -27,7 +27,7 @@ CF FetchCodes prioritizes your privacy and security. The extension operates enti
 We welcome your feedback and contributions to improve CF FetchCodes. If you encounter any issues or have suggestions for enhancements, please visit our [GitHub repository](https://github.com/sa-paul/CF_FetchCodes). You can submit bug reports, feature requests, or even contribute code through pull requests.
 
 ## Support and Contact
-If you need any assistance or have any questions regarding CF FetchCodes, feel free to reach out to our support team. You can contact us by sending an email to [support@cf-fetchcodes.com](mailto:support@cf-fetchcodes.com).
+If you need any assistance or have any questions regarding CF FetchCodes, feel free to reach out to our support team. You can contact us by sending an email to [support@cf-fetchcodes.com](mailto:sayanpauldeveloper@gmail.com).
 
 ## Conclusion
 CF FetchCodes is your go-to companion for exploring the accepted codes of your CodeForces friends. Gain insights, learn new techniques, and expand your coding knowledge. Install CF FetchCodes today and unlock a world of coding possibilities on CodeForces.
