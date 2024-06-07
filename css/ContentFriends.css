@@ -66,6 +66,7 @@
   color: #800;
   font-weight: 700;
   font-family:  monospace;
+  text-decoration-line: none;
 }
 #TextModal{
   color: #080;

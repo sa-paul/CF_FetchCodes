@@ -235,7 +235,7 @@ friendsPromise.then(async function (data) {
     // Add Codes to Modal Corresponding to Submission ID
     await fetchCodeFromSubmission(contestId, Number(submissionId))
     .then(async function (Code) {
-        modalCodeID.innerHTML += `<span id="TextModal">Code submitted by </span><span id="HandleModal">${handle}\n\n </span>`;
+        modalCodeID.innerHTML += `<span id="TextModal">Code submitted by </span><a href="https://codeforces.com/profile/${handle}" id="HandleModal" target="_blank">${handle}\n\n </a>`;
 
         // Add a span element with a CSS class around the Code variable
         modalCodeID.innerHTML += `<span class="codeSnippet">${Code}\n\n</span>`;
