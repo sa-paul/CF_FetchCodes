@@ -18,14 +18,13 @@
   height: 100%;
   overflow: auto;
   z-index: 30;
-  background-color: #eff0f1;
+  /* background-color: #eff0f1; */ 
   border: none;
 }
 
 /* Modal Content */
 .modalContent {
   background-color: #fefefe; 
-  /* background-color: #eff0f1; */
   padding: 20px;
   border: 0.6rem solid #888;
   border-radius: 0.6rem;
@@ -72,4 +71,5 @@
   color: #080;
   font-weight: bold;
   font-family:  monospace;
+  text-decoration-line: none;
 }

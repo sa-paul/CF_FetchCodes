@@ -5,6 +5,12 @@ function goDeveloperProfile() {
     //  Creating a New tab 
     chrome.tabs.create({ url: profileUrl });
 }
+function goGithubProfile() {
+    const profileUrl = 'https://github.com/sa-paul';
+    
+    //  Creating a New tab 
+    chrome.tabs.create({ url: profileUrl });
+}
 
 // Opening Developer's Handle on Click
 document.addEventListener('DOMContentLoaded', function () {
@@ -13,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Click on Developer Contact Section 
     developerHandleID.addEventListener('click', goDeveloperProfile);
-    developerContactID.addEventListener('click', goDeveloperProfile);
+    developerContactID.addEventListener('click', goGithubProfile);
 });
 
 
