@@ -146,23 +146,23 @@ const Contest_ID_const = getContestIdFromUrl(); // console.log(Contest_ID_const)
 
 // Extacting Submission ID corresponding to contest ID, submission ID and Handle
 async function getSubmissionId(contestIds, problemIds, handles) {
-  let response = await fetch(`https://codeforces.com/api/contest.status?contestId=${contestIds}&from=1&count=10&handle=${handles}`);
+  let response = await fetch(`https://codeforces.com/api/contest.status?contestId=${contestIds}&handle=${handles}`);
   let data = await response.json();
 
   // Filter submissions for the desired problem and ver dict
-  let submissions = data.result.filter(submission => {
-    return submission.contestId === contestIds
-      && submission.problem.index === problemIds
-      && submission.verdict === "OK";
-  });
-
-  // Return the submission ID if found
-  if (submissions.length > 0) {
-    return submissions[0].id;
+  if(data.result && data.result.length > 0){
+    let submissions = data.result.filter(submission => {
+      return submission.contestId === contestIds
+        && submission.problem.index === problemIds
+        && submission.verdict === "OK";
+    });
+    // Return the submission ID if found
+    if (submissions.length > 0) {
+      return [submissions[0].id,submissions[0].programmingLanguage];
+    }
   }
-
   // Return -1 if no submission with 'OK' verdict found
-  return -1;
+  return [-1,"No Code Found"];
 }
 
 // Extract codes from contest ID and submission ID
@@ -191,6 +191,92 @@ async function fetchCodeFromSubmission(contest_id, submission_id) {
     });
 }
 
+// convert html entities in notaion 
+function convertHtmlEntities(codeSnippet) {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = codeSnippet;
+  return textarea.value;
+}
+
+// getting the alias for highlight js wrt problem language
+function getHighlightJsAlias(language) {
+  let alias;
+  switch (language) {
+      // Existing cases remain unchanged
+      case 'GNU GCC':
+      case 'GNU G++14':
+      case 'C++20 (GCC 13-64)':
+      case 'C++17 (GCC 7-32)':
+      case 'C++14 (GCC 6-32)':
+      case 'GNU C++':
+      case 'GNU C11':
+      case 'GNU G++20':
+          alias = 'cpp';
+          break;
+      case 'C# 8':
+      case 'C# 10':
+      case 'C#':
+      case 'Mono C#':
+          alias = 'csharp';
+          break;
+      case 'Go':
+          alias = 'go';
+          break;
+      case 'Haskell GHC':
+      case 'Haskell':
+          alias = 'haskell';
+          break;
+      case 'Java':
+      case 'Java 8':
+      case 'Java 11':
+      case 'Java 21':
+          alias = 'java';
+          break;
+      case 'Kotlin':
+      case 'Kotlin 1.7':
+      case 'Kotlin 1.9':
+          alias = 'kotlin';
+          break;
+      case 'Delphi':
+      case 'Free Pascal':
+      case 'PascalABC.NET':
+      case 'Delphi 10':
+          alias = 'delphi';
+          break;
+      case 'PHP':
+      case 'PHP 7':
+          alias = 'php';
+          break;
+      case 'Python':
+      case 'Python 2':
+      case 'Python 3':
+      case 'PyPy':
+      case 'PyPy 2':
+      case 'PyPy 3':
+      case 'PyPy 3-64':
+          alias = 'python';
+          break;
+      case 'Ruby':
+      case 'Ruby 3':
+          alias = 'ruby';
+          break;
+      case 'Rust':
+      case 'Rust 2021':
+          alias = 'rust';
+          break;
+      case 'Scala':
+          alias = 'scala';
+          break;
+      case 'Node.js':
+          alias = 'nodejs';
+          break;
+      default:
+          alias = 'cpp';
+  }
+  return alias;
+}
+
+
 // Sleep Function to reduce URL fetch-rate
 function sleep(miliSecond) {
   return new Promise(resolve => setTimeout(resolve, miliSecond));
@@ -207,6 +293,9 @@ let problemId = String(Problem_ID_const);
 // Getting list of friends using parser in a promise object
 let friendsPromise = getFriendsUsernameList();
 
+// to check if code has changed or not 
+var prevCode="No Submission Found!",prevSubmissionID=12345678;
+
 // Add Fetched Codes to Modal
 friendsPromise.then(async function (data) {
   // For each Handle Fetch and Add Codes to Modal
@@ -214,10 +303,12 @@ friendsPromise.then(async function (data) {
     let handle = data[i];            // console.log(handle);
 
     // Print Submission ID in console
-    let submissionId = await getSubmissionId(contestId, problemId, handle);   // console.log(submissionId);
-    
+    let idLang = await getSubmissionId(contestId, problemId, handle);  
+    let submissionId = idLang[0],lang =idLang[1];
+    submissionId=Number(submissionId);
+
     // made the function to wait to reduce fetch-rate to avoid being block
-    count++;                          // console.log(count);
+    count++;                         
     let current = new Date();
     if ((count % 6) == 0) {
       await sleep(1000);
@@ -228,19 +319,21 @@ friendsPromise.then(async function (data) {
     }// end wait function
     
     // when submission with verdict "ok" not found, don't add any code
-    if (submissionId == -1 ) {
-      continue;
+    if (submissionId != -1 && !isNaN(submissionId)) { 
+      // Add Codes to Modal Corresponding to Submission ID
+      var Code = await fetchCodeFromSubmission(contestId, submissionId);
+      if(prevCode!= Code && prevSubmissionID != submissionId){
+      // .then(async function (Code) {
+          modalCodeID.innerHTML += `<span id="TextModal">Code submitted by </span><a href="https://codeforces.com/profile/${handle}" id="HandleModal" target="_blank">${handle}\n\n </a>`;
+
+          const aliasLang = getHighlightJsAlias(lang);
+          var hightlightedCode =hljs.highlight(Code,{language:aliasLang}).value
+          modalCodeID.innerHTML += `<pre><code >${convertHtmlEntities(hightlightedCode)}</code></pre>\n\n`;
+        // });
+        }
+        prevSubmissionID= submissionId;
+        prevCode=Code;
+      }
     }
-
-    // Add Codes to Modal Corresponding to Submission ID
-    await fetchCodeFromSubmission(contestId, Number(submissionId))
-    .then(async function (Code) {
-        modalCodeID.innerHTML += `<span id="TextModal">Code submitted by </span><a href="https://codeforces.com/profile/${handle}" id="HandleModal" target="_blank">${handle}\n\n </a>`;
-
-        // Add a span element with a CSS class around the Code variable
-        modalCodeID.innerHTML += `<span class="codeSnippet">${Code}\n\n</span>`;
-
-      });
-  }
 });
 

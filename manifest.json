@@ -25,11 +25,14 @@
         {
           "js": [
             "js/ContentFriends.js",
-            "js/popup.js"
+            "js/popup.js",
+            "js/highlight.min.js",
+            "js/go.min.js"
           ],
           "css":[
             "css/ContentFriends.css",
-            "css/popup.css"
+            "css/popup.css",
+            "css/default.min.css"
           ],
           "matches": [
             "https://codeforces.com/contest/*/problem/*",
