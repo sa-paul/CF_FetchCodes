@@ -5,9 +5,9 @@ CF FetchCodes is a powerful browser extension designed to enhance the CodeForces
 
 ## Installation
 To install CF FetchCodes, follow these steps:
-1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/cf-fetchcodes/ombmefkchmjbodcoboeagbpaejfojnga).
-2. Click on the "Add to Chrome" button.
-3. A confirmation dialog will appear. Click "Add extension" to install CF FetchCodes.
+1. Visit the [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/cf-fetchcodes/).
+2. Click on the "Add to Firefox" button.
+3. A confirmation dialog will appear. Click "Add" to install CF FetchCodes.
 4. Once installed, CF FetchCodes will be added to your browser's toolbar.
 
 ## Usage
