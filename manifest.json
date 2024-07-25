@@ -1,7 +1,7 @@
 {
     "name": "CF FetchCodes",
     "description":"Fetch Accepted Codes of CodeForces Friends",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "manifest_version": 3,
     "action": {
       "default_popup": "popup.html",
@@ -26,11 +26,12 @@
           "js": [
             "js/ContentFriends.js",
             "js/popup.js",
-            "js/run_prettify.js"
+            "js/prettify.js"
           ],
           "css":[
             "css/ContentFriends.css",
-            "css/popup.css"
+            "css/popup.css",
+            "css/prettify.css"
           ],
           "matches": [
             "https://codeforces.com/contest/*/problem/*",
