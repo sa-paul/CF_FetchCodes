@@ -1,251 +1,323 @@
-// Content addition to id="sidebar" of CF Problem-Page 
-let sidebarID = document.getElementById(`sidebar`);
+// ==========================================
+// 1. CONFIG & CACHE
+// ==========================================
+const CONFIG = {
+    cfBaseUrl: "https://codeforces.com",
+    apiBaseUrl: "https://codeforces.com/api",
+    baseDelay: 1500, 
+    randomJitter: 500,
+    batchSize: 10, 
+    batchRestTime: 4000 
+};
 
-// Adding a new box-section to sidebar
-/*  The Box will contain heading and button as follows:
-*   → Accepted Codes of Friends     
-*     Show Codes
-*/
-sidebarID.innerHTML += `
-<div class="roundbox sidebox sidebar-menu borderTopRound " style="">
-    <div class="caption titled">→ Accepted Codes of Friends</div>
-    <div>
-        <ul>
-            <li>
-                <span>
-                    <span id="showCodeButton">Show Codes</span>
-                </span>
-            </li>
-        </ul>
-    </div>
-</div>`;
+const CODE_CACHE = new Map();
 
-
-// Adding Modal to the pageContent to Show Codes on clicking
-let pageContentID = document.getElementById(`pageContent`);
-/*  The 3 layers of Modals as follows:
-*   Modal (default hidden)
-*     Modal Contents 
-*       Modal Codes (section for codes) & Modal Close (closing button)
-*         Modal Code Header
-*/
-pageContentID.innerHTML += `
-<div id="modal" class="modal">
-  <div class="modalContent">
-    <span class="modalClose">&times;</span>
-    <pre id="modalCode" ><code> <span class="modalCodeHeader">→ Accepted Codes of Friends</span><hr> </code></pre>
-  </div>
-</div>;`
-
-/*
-*   Declaring variables corresponding to class and id
-*     Adding Modal effects on clicking 
-*/
-
-// Get the modal
-const modalID = document.getElementById("modal");
-
-// Get the button that opens the modal
-const showCodeButtonID = document.getElementById("showCodeButton");
-
-// Get the <span> element that closes the modal
-const modalCloseID = document.getElementsByClassName("modalClose")[0];
-
-// Get the Modal Code in which codes wil be added 
-const modalCodeID = document.getElementById(`modalCode`);
-
-// When the user clicks the Show Code button, open the modal 
-showCodeButtonID.onclick = function () {
-    modalID.style.display = "block";
-}
-
-// When the user clicks on <span> (x), i.e Modal Close, close the modal
-modalCloseID.onclick = function () {
-    modalID.style.display = "none";
-}
-
-// When the user clicks anywhere outside of the modal, close modal
-window.onclick = function (event) {
-    if (event.target == modalID) {
-        modalID.style.display = "none";
+const Utils = {
+    getRandomInt: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
+    sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+    humanSleep: async () => {
+        const jitter = Utils.getRandomInt(0, CONFIG.randomJitter);
+        await Utils.sleep(CONFIG.baseDelay + jitter);
+    },
+    getProblemIdFromUrl: () => {
+        const url = new URL(window.location.href);
+        const path = url.pathname.split('/');
+        return path[path.length - 1];
+    },
+    getContestIdFromUrl: () => {
+        const url = new URL(window.location.href);
+        const path = url.pathname.split('/');
+        if (path.includes('contest')) return path[path.indexOf('contest') + 1];
+        if (path.includes('problemset')) return path[path.indexOf('problemset') + 2];
+        return null;
+    },
+    getPrettifyClass: (cfLanguageString) => {
+        if (!cfLanguageString) return '';
+        const s = cfLanguageString.toLowerCase();
+        if (s.includes('c++')) return 'lang-cpp';
+        if (s.includes('java') && !s.includes('script')) return 'lang-java';
+        if (s.includes('python') || s.includes('pypy')) return 'lang-py';
+        if (s.includes('c#') || s.includes('mono')) return 'lang-cs';
+        return '';
     }
-}
+};
 
+// ==========================================
+// 2. UI MANIPULATION
+// ==========================================
+const UI = {
+    sidebarId: 'sidebar',
+    pageContentId: 'pageContent',
+    modalId: 'cf_friends_modal',
+    listContainerId: 'cf_friends_list_container',
+    progressFillId: 'cf_progress_fill',
+    progressTextId: 'cf_progress_text',
 
-/*
-*   Declaring and defining functions 
-*     1. getProblemIdFromUrl()     => Extract problem ID from the current URL
-*     2. getContestIdFromUrl()     => Extract contest ID from the current URL
-*     3. getFriendsUsernameList()  => Extract Handles of User's CF Friends
-*     4. getSubmissionId()         => Extacting Submission ID corresponding to contest ID, submission ID and Handle
-*     5. fetchCodeFromSubmission() => Extract codes from contest ID and submission ID
-*     6. sleep()                   => Sleep Function to reduce URL fetch-rate
-*     7. Add Fetched Codes to Modal
-*/
+    init: () => {
+        UI.injectSidebarBox();
+        UI.injectModal();
+        UI.setupEventListeners();
+    },
 
-// Extract problem ID from the current URL like A or B or C
-function getProblemIdFromUrl() {
-    const url = new URL(window.location.href);
-    const path = url.pathname.split('/');
-    const problemId = path[path.length - 1];
-    return problemId;
-}
+    injectSidebarBox: () => {
+        const sidebar = document.getElementById(UI.sidebarId);
+        if (!sidebar) return;
+        const boxHtml = `
+            <div class="roundbox sidebox sidebar-menu borderTopRound">
+                <div class="caption titled">→ Accepted Codes of Friends</div>
+                <div><ul><li><span>
+                    <span id="showCodeButton" class="sidebar-link">Show Codes</span>
+                </span></li></ul></div>
+            </div>`;
+        sidebar.insertAdjacentHTML('beforeend', boxHtml);
+    },
 
-// Extract contest ID from the current URL like 1830, 1836 
-function getContestIdFromUrl() {
-    const url = new URL(window.location.href);
-    const pathSegments = url.pathname.split('/');
-    let contestIdIndex = -1;
-    for (let i = 0; i < pathSegments.length; i++) {
-        if (pathSegments[i] === 'contest') {
-            contestIdIndex = i + 1;
-            break;
+    injectModal: () => {
+        const pageContent = document.getElementById(UI.pageContentId);
+        if (!pageContent) return;
+        const modalHtml = `
+            <div id="${UI.modalId}" class="modal">
+                <div class="modalContent">
+                    <span class="modalClose">&times;</span>
+                    <div class="modalHeaderContainer">
+                        <div class="modalCodeHeader">→ Accepted Codes of Friends</div>
+                        <div class="progress-info" id="${UI.progressTextId}">Initializing...</div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="${UI.progressFillId}"></div>
+                        </div>
+                    </div>
+                    <div id="${UI.listContainerId}"></div>
+                </div>
+            </div>`;
+        pageContent.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    setupEventListeners: () => {
+        const modal = document.getElementById(UI.modalId);
+        const btn = document.getElementById("showCodeButton");
+        const span = document.getElementsByClassName("modalClose")[0];
+        const listContainer = document.getElementById(UI.listContainerId);
+
+        if (btn) btn.onclick = () => modal.style.display = "block";
+        if (span) span.onclick = () => modal.style.display = "none";
+        window.onclick = (event) => {
+            if (event.target == modal) modal.style.display = "none";
+        };
+
+        // EVENT DELEGATION FOR ACCORDION
+        if (listContainer) {
+            listContainer.addEventListener('click', (e) => {
+                
+                // 1. Check if user clicked the PROFILE LINK
+                if (e.target.closest('.friend-profile-link')) {
+                    // Allow default link behavior (opening new tab), 
+                    // but STOP propagation so the accordion doesn't toggle.
+                    e.stopPropagation(); 
+                    return;
+                }
+
+                // 2. Check if user clicked the ROW (Header)
+                const header = e.target.closest('.accordion-header');
+                if (header) {
+                    const { submissionId, contestId, language } = header.dataset;
+                    UI.toggleCode(submissionId, contestId, language, header);
+                }
+            });
         }
-        if (pathSegments[i] === 'problemset') {
-            contestIdIndex = i + 2;
-            break;
+    },
+
+    updateProgress: (current, total) => {
+        const textEl = document.getElementById(UI.progressTextId);
+        const fillEl = document.getElementById(UI.progressFillId);
+        if (textEl && fillEl) {
+            const percentage = Math.floor((current / total) * 100);
+            textEl.innerText = `Checking friends: ${current} / ${total}`;
+            fillEl.style.width = `${percentage}%`;
+            if (current === total) {
+                textEl.innerText = `Done! Checked ${total} friends.`;
+                fillEl.style.backgroundColor = "#00a65a"; 
+            }
+        }
+    },
+
+    addFriendToList: (friendObj, contestId, submissionId, language) => {
+        const listContainer = document.getElementById(UI.listContainerId);
+        const uniqueId = `sub-${submissionId}`;
+
+        const html = `
+            <div class="accordion-item">
+                <div class="accordion-header" 
+                     data-submission-id="${submissionId}" 
+                     data-contest-id="${contestId}" 
+                     data-language="${language}">
+                     
+                    <a href="${CONFIG.cfBaseUrl}/profile/${friendObj.handle}" 
+                       class="friend-name friend-profile-link ${friendObj.cssClass}" 
+                       target="_blank">
+                       ${friendObj.handle}
+                    </a>
+
+                    <span class="friend-status-info">
+                        ${language} 
+                        <span style="font-size: 0.8rem; opacity: 0.6;">▼</span>
+                    </span>
+                </div>
+                <div id="${uniqueId}" class="accordion-content">
+                    </div>
+            </div>
+        `;
+        listContainer.insertAdjacentHTML('beforeend', html);
+    },
+
+    toggleCode: async (submissionId, contestId, language, headerElement) => {
+        const contentDiv = document.getElementById(`sub-${submissionId}`);
+        const isClosed = contentDiv.style.display === '' || contentDiv.style.display === 'none';
+
+        if (isClosed) {
+            contentDiv.style.display = 'block';
+            headerElement.classList.add('active');
+            if (contentDiv.innerHTML.trim() === "") {
+                await UI.loadCodeIntoDiv(contentDiv, submissionId, contestId, language);
+            }
+        } else {
+            contentDiv.style.display = 'none';
+            headerElement.classList.remove('active');
+        }
+    },
+
+    loadCodeIntoDiv: async (containerDiv, submissionId, contestId, language) => {
+        containerDiv.innerHTML = `<div class="loading-spinner">Fetching code...</div>`;
+
+        if (CODE_CACHE.has(submissionId)) {
+            const cachedData = CODE_CACHE.get(submissionId);
+            // Pass contestId to renderCode
+            UI.renderCode(containerDiv, cachedData.code, cachedData.langClass, submissionId, contestId);
+            return;
+        }
+
+        const code = await API.fetchCode(contestId, submissionId);
+        const langClass = Utils.getPrettifyClass(language);
+
+        if (code) {
+            CODE_CACHE.set(submissionId, { code, langClass });
+            // Pass contestId to renderCode
+            UI.renderCode(containerDiv, code, langClass, submissionId, contestId);
+        } else {
+            containerDiv.innerHTML = `<div style="padding:20px; color:red; text-align:center;">Failed to load code.</div>`;
+        }
+    },
+
+    renderCode: (containerDiv, code, langClass, submissionId, contestId) => {
+        const submissionUrl = `${CONFIG.cfBaseUrl}/contest/${contestId}/submission/${submissionId}`;
+
+        const submissionLink = `
+            <div style="padding: 8px 20px; background:#f8f9fa; border-bottom:1px solid #eee; text-align:right;">
+                <a href="${submissionUrl}" target="_blank" style="color:#0054aa; font-weight:bold; text-decoration:none; font-size: 0.9rem;">
+                    View original submission ↗
+                </a>
+            </div>`;
+
+        containerDiv.innerHTML = `
+            ${submissionLink}
+            <pre class="prettyprint ${langClass}">${code}</pre>
+        `;
+        
+        if (typeof PR !== 'undefined' && PR.prettyPrint) {
+            PR.prettyPrint();
+        } else if (window.PR && window.PR.prettyPrint) {
+            window.PR.prettyPrint();
         }
     }
-    if (contestIdIndex !== -1 && contestIdIndex < pathSegments.length) {
-        return pathSegments[contestIdIndex];
-    }
-    return null;
-}
+};
 
-// Extract Handles of User's CF Friends 
-async function getFriendsUsernameList() {
-    return fetch("https://codeforces.com/friends")
-        .then(function (res) {
-            return res.text();
-        })
-        .then(function (htmlContent) {
+// ==========================================
+// 3. API LAYER
+// ==========================================
+const API = {
+    getFriendsList: async () => {
+        try {
+            const res = await fetch(`${CONFIG.cfBaseUrl}/friends`);
+            const html = await res.text();
             const parser = new DOMParser();
-            // Parse the HTML content
-            const parsedHtml = parser.parseFromString(htmlContent, 'text/html');
+            const doc = parser.parseFromString(html, 'text/html');
+            const friendsElements = Array.from(doc.querySelectorAll('.datatable .rated-user'));
+            return friendsElements.map(el => ({
+                handle: el.innerText.trim(),
+                cssClass: el.className 
+            }));
+        } catch (err) { return []; }
+    },
 
-            // Access the parsed document
-            const document = parsedHtml.documentElement;
+    getSubmissionData: async (contestId, problemId, handle) => {
+        try {
+            const url = `${CONFIG.apiBaseUrl}/contest.status?contestId=${contestId}&handle=${handle}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.status === "OK" && data.result) {
+                const accepted = data.result.find(sub => 
+                    sub.contestId == contestId && 
+                    sub.problem.index == problemId && 
+                    sub.verdict === "OK"
+                );
+                if (accepted) {
+                    return { id: accepted.id, language: accepted.programmingLanguage };
+                }
+            }
+            return null;
+        } catch (err) { return null; }
+    },
 
-            // parse usernames
-
-            //  Select the parent element with class "datatable"
-            const datatableElement = document.getElementsByClassName('datatable')[0];
-
-            // Select the elements with class "rated-user" inside the "datatable" element /$
-            const friends_div = datatableElement.getElementsByClassName('rated-user');
-
-            // const friends_div = document.getElementsByClassName("rated-user");
-            const friends_usernames = Array.from(friends_div).map(x => x.innerText);
-            return friends_usernames;
-        })
-}
-
-// Assigning Problem ID and Contest ID to respective variables 
-const Problem_ID_const = getProblemIdFromUrl(); // console.log(Problem_ID_const);
-const Contest_ID_const = getContestIdFromUrl(); // console.log(Contest_ID_const);
-
-// Extacting Submission ID corresponding to contest ID, submission ID and Handle
-async function getSubmissionId(contestIds, problemIds, handles) {
-    let response = await fetch(`https://codeforces.com/api/contest.status?contestId=${contestIds}&handle=${handles}`);
-    let data = await response.json();
-
-    // Filter submissions for the desired problem and ver dict
-    if (data.result && data.result.length > 0) {
-        let submissions = data.result.filter(submission => {
-            return submission.contestId === contestIds
-                && submission.problem.index === problemIds
-                && submission.verdict === "OK";
-        });
-        // Return the submission ID if found
-        if (submissions.length > 0) {
-            return submissions[0].id;
-        }
+    fetchCode: async (contestId, submissionId) => {
+        try {
+            await Utils.sleep(300); 
+            const res = await fetch(`${CONFIG.cfBaseUrl}/contest/${contestId}/submission/${submissionId}`);
+            const text = await res.text();
+            const regex = /<pre[^>]*id="program-source-text"[^>]*>(.*?)<\/pre>/s;
+            const match = text.match(regex);
+            return match && match[1] ? match[1] : null;
+        } catch (err) { return null; }
     }
-    // Return -1 if no submission with 'OK' verdict found
-    return -1;
-}
+};
 
-// Extract codes from contest ID and submission ID
-async function fetchCodeFromSubmission(contest_id, submission_id) {
-    return await fetch(`https://codeforces.com/contest/${contest_id}/submission/${submission_id}`)
-        .then(async function (res) {
-            return await res.text();
-        })
-        .then(async function (textHtml) {
-            // Regular expression pattern to extract the content between <pre id="program-source-text"> and </pre>
-            const regexPattern = /<pre[^>]*id="program-source-text"[^>]*>(.*?)<\/pre>/s;
+// ==========================================
+// 4. MAIN LOGIC
+// ==========================================
+async function initExtension() {
+    const contestId = Utils.getContestIdFromUrl();
+    const problemId = Utils.getProblemIdFromUrl();
+    if (!contestId || !problemId) return;
 
-            // Extract the content using the regular expression
-            const match = textHtml.match(regexPattern);
+    UI.init();
 
-            // Check if a match is found and extract the code
-            if (match && match.length > 1) {
-                let code = match[1];
-                return code;
-            } else {
-                return "No result found !";
-            }
-        })
-        .catch(function (_) {
-            return "No submission found !";
-        });
-}
-
-// Sleep Function to reduce URL fetch-rate
-function sleep(miliSecond) {
-    return new Promise(resolve => setTimeout(resolve, miliSecond));
-}
-
-// Variables for reducing code execution
-let count = 0;
-let start = new Date();
-
-// Variables to be passed in function getSubmissionId()
-let contestId = Number(Contest_ID_const);
-let problemId = String(Problem_ID_const);
-
-// Getting list of friends using parser in a promise object
-let friendsPromise = getFriendsUsernameList();
-
-// to check if code has changed or not 
-var prevCode = "No Submission Found!", prevSubmissionID = 12345678;
-
-// Add Fetched Codes to Modal
-friendsPromise.then(async function (data) {
-    // For each Handle Fetch and Add Codes to Modal
-    for (let i = 0; i < data.length; i++) {
-        let handle = data[i];           
-
-        // Print Submission ID in console
-        let submissionId  = await getSubmissionId(contestId, problemId, handle);
-        submissionId = Number(submissionId);
-
-        // made the function to wait to reduce fetch-rate to avoid being block
-        count++;
-        let current = new Date();
-        if ((count % 6) == 0) {
-            await sleep(1000);
-            if ((current - start) < 5000) {
-                await sleep(3500);
-            }
-            start = new Date();
-        }// end wait function
-
-        // when submission with verdict "ok" not found, don't add any code
-        if (submissionId != -1 && !isNaN(submissionId)) {
-
-            // Add Codes to Modal Corresponding to Submission ID
-            var Code = await fetchCodeFromSubmission(contestId, submissionId);
-
-            if (prevCode != Code && prevSubmissionID != submissionId) { // Check if 'Code' and 'submissionId' has changed for this problem
-                modalCodeID.innerHTML += `<a href="https://codeforces.com/contest/${contestId}/submission/${submissionId}" id="TextModal" target="_blank">Code submitted by</a> &nbsp;<a href="https://codeforces.com/profile/${handle}" id="HandleModal" target="_blank">${handle}\n\n </a>`;
-                modalCodeID.innerHTML += `<pre class="prettyprint linenums">${Code}</pre>\n\n`;
-            }
-
-            prevSubmissionID = submissionId;
-            prevCode = Code;
-        }
-        document.addEventListener('load', PR.prettyPrint());
+    const friends = await API.getFriendsList();
+    if (friends.length === 0) {
+        UI.updateProgress(0, 0);
+        document.getElementById(UI.progressTextId).innerText = "No friends found.";
+        return;
     }
-});
 
+    friends.sort(() => Math.random() - 0.5);
+    const totalFriends = friends.length;
+    UI.updateProgress(0, totalFriends);
+
+    let checkedCount = 0;
+
+    for (const friend of friends) {
+        if (checkedCount > 0 && checkedCount % CONFIG.batchSize === 0) {
+            await Utils.sleep(CONFIG.batchRestTime);
+        } else {
+            await Utils.humanSleep();
+        }
+
+        const submissionData = await API.getSubmissionData(contestId, problemId, friend.handle);
+
+        if (submissionData) {
+            UI.addFriendToList(friend, contestId, submissionData.id, submissionData.language);
+        }
+
+        checkedCount++;
+        UI.updateProgress(checkedCount, totalFriends);
+    }
+}
+
+initExtension();

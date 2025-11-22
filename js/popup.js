@@ -21,7 +21,3 @@ document.addEventListener('DOMContentLoaded', function () {
     developerHandleID.addEventListener('click', goDeveloperProfile);
     developerContactID.addEventListener('click', goGithubProfile);
 });
-
-
-
-
