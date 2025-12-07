@@ -186,25 +186,85 @@ const UI = {
     },
 
     loadCodeIntoDiv: async (containerDiv, submissionId, contestId, language) => {
-        containerDiv.innerHTML = `<div class="loading-spinner">Fetching code...</div>`;
+        containerDiv.innerHTML = `<div class="loading-spinner">Fetching Code...</div>`;
+        
+        let cached = CODE_CACHE.get(submissionId);
+        let result;
 
-        if (CODE_CACHE.has(submissionId)) {
-            const cachedData = CODE_CACHE.get(submissionId);
-            // Pass contestId to renderCode
-            UI.renderCode(containerDiv, cachedData.code, cachedData.langClass, submissionId, contestId);
+        // 1. Check Cache
+        if (cached) {
+            result = { status: "OK", content: cached };
+        } else {
+            // 2. Fetch Fresh
+            result = await API.fetchCode(contestId, submissionId);
+            if (result.status === "OK") {
+                CODE_CACHE.set(submissionId, result.content);
+            }
+        }
+
+        // Case 1: Success
+        if (result.status === "OK") {
+            UI.renderCode(containerDiv, result.content, language, submissionId, contestId);
             return;
         }
 
-        const code = await API.fetchCode(contestId, submissionId);
-        const langClass = Utils.getPrettifyClass(language);
+        // Case 2: Not Logged In (Session Expired) -> WITH RETRY
+        if (result.status === "AUTH_ERROR") {
+            const uniqueBtnId = `retry-btn-${submissionId}`;
+            
+            containerDiv.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #e06c75; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px;">
+                    <strong>Session Expired</strong><br>
+                    <span style="font-size: 0.9em; color: #666; display:block; margin: 5px 0 15px 0;">
+                        Please login to view solutions, then click Retry.
+                    </span>
+                    
+                    <div style="display: flex; justify-content: center; gap: 10px;">
+                        <a href="https://codeforces.com/enter" target="_blank" 
+                           style="background: #0054aa; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 0.9em; border: 1px solid #004080;">
+                           Login ↗
+                        </a>
+                        
+                        <button id="${uniqueBtnId}" 
+                           style="background: #fff; color: #333; padding: 6px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 0.9em;">
+                           ↻ Retry
+                        </button>
+                    </div>
+                </div>`;
 
-        if (code) {
-            CODE_CACHE.set(submissionId, { code, langClass });
-            // Pass contestId to renderCode
-            UI.renderCode(containerDiv, code, langClass, submissionId, contestId);
-        } else {
-            containerDiv.innerHTML = `<div style="padding:20px; color:red; text-align:center;">Failed to load code.</div>`;
+            // CRITICAL: Attach event listener dynamically (Content Scripts cannot use inline onclick)
+            const retryBtn = document.getElementById(uniqueBtnId);
+            if (retryBtn) {
+                retryBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent accordion from toggling
+                    // Recursive call to try again
+                    UI.loadCodeIntoDiv(containerDiv, submissionId, contestId, language);
+                };
+            }
+            return;
         }
+
+        // Case 3: Submission Hidden
+        if (result.status === "LOCKED_ERROR") {
+            containerDiv.innerHTML = `
+                <div style="padding: 20px; color: #888; text-align: center; background: #f8f9fa; border-radius: 6px;">
+                    <strong>Restricted Access</strong><br>
+                    <span style="font-size: 0.9em;">
+                        This user has hidden their submissions or this is a private contest.
+                    </span>
+                </div>`;
+            return;
+        }
+
+        // Case 4: Generic/Network Error
+        const originalLink = `${CONFIG.cfBaseUrl}/contest/${contestId}/submission/${submissionId}`;
+        containerDiv.innerHTML = `
+            <div style="padding: 20px; color: #666; text-align: center;">
+                Unable to fetch automatically.<br>
+                <a href="${originalLink}" target="_blank" style="color: #0054aa; font-weight: bold; font-size: 0.9em;">
+                    View original submission ↗
+                </a>
+            </div>`;
     },
 
     renderCode: (containerDiv, code, langClass, submissionId, contestId) => {
@@ -269,13 +329,38 @@ const API = {
 
     fetchCode: async (contestId, submissionId) => {
         try {
-            await Utils.sleep(300); 
-            const res = await fetch(`${CONFIG.cfBaseUrl}/contest/${contestId}/submission/${submissionId}`);
+            await Utils.sleep(200);
+            const url = `${CONFIG.cfBaseUrl}/contest/${contestId}/submission/${submissionId}`;
+            const res = await fetch(url);
+
+            // Check for Redirects (Home screen or Login screen)
+            if (res.redirected) {
+                const newUrl = new URL(res.url);
+                if (newUrl.pathname === '/' || newUrl.pathname.includes('/enter')) {
+                    return { status: "AUTH_ERROR" };
+                }
+            }
+
             const text = await res.text();
-            const regex = /<pre[^>]*id="program-source-text"[^>]*>(.*?)<\/pre>/s;
-            const match = text.match(regex);
-            return match && match[1] ? match[1] : null;
-        } catch (err) { return null; }
+
+            const match = text.match(/<pre[^>]*id="program-source-text"[^>]*>(.*?)<\/pre>/s);
+            if (match && match[1]) {
+                return { status: "OK", content: match[1] };
+            }
+
+            // Check for specific indicators that user is NOT logged in
+            if (text.includes('href="/enter?back') || text.includes('class="register-link"')) {
+                return { status: "AUTH_ERROR" };
+            }
+
+            // If user is logged in (no register link) but code is missing,
+            // it means the submission is explicitly hidden/locked by the friend.
+            return { status: "LOCKED_ERROR" };
+
+        } catch (e) { 
+            console.error("Fetch Error:", e);
+            return { status: "GENERIC_ERROR" }; 
+        }
     }
 };
 
