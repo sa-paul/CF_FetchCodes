@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "CF FetchCodes",
-  "version": "25.12.07",
+  "version": "25.12.7",
   "description": "Fetch Accepted Codes of CodeForces Friends",
   "icons": {
     "48": "assets/icon48.png",
@@ -25,7 +25,7 @@
       "js": [
         "js/ContentFriends.js",
         "js/popup.js",
-        "js/prettify.js"
+        "js/run_prettify.js"
       ],
       "css": [
         "css/ContentFriends.css",
