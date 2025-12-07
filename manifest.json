@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "CF FetchCodes",
-  "version": "25.11.21",
+  "version": "25.12.07",
   "description": "Fetch Accepted Codes of CodeForces Friends",
   "icons": {
     "48": "assets/icon48.png",
