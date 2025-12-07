@@ -1,7 +1,7 @@
 {
     "name": "CF FetchCodes",
     "description":"Fetch Accepted Codes of CodeForces Friends",
-    "version": "25.11.21",
+    "version": "25.12.07",
     "manifest_version": 3,
     "action": {
       "default_popup": "popup.html",
